@@ -13,9 +13,9 @@
 
 ## 📥 下载使用
 
-### 一键打包版 (推荐)
+### 一键打包版 (不推荐)
 - **Windows可执行文件**: [OLLAMA视频翻译助手 v1.0.0](https://github.com/Jasonshll/OllamaVideoTranslator/releases/tag/OLLAMA%E8%A7%86%E9%A2%91%E7%BF%BB%E8%AF%91%E5%8A%A9%E6%89%8Bv1.0)
-- 无需安装Python环境，下载即用
+- 无需安装Python环境，下载即用，但目前版本可能存在很多BUG
 - 文件大小: ~400MB (不包含whisper)
 
 ### 源码安装
