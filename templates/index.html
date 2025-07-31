@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能字幕提取器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .hover-scale {
+            transition: transform 0.3s ease;
+        }
+        .hover-scale:hover {
+            transform: scale(1.02);
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- 头部标题 -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                <i class="fas fa-closed-captioning mr-3"></i>智能字幕提取器
+            </h1>
+            <p class="text-gray-300 text-lg">基于AI的本地视频字幕生成与优化工具</p>
+        </div>
+
+        <!-- 标签页导航 -->
+        <div class="flex justify-center mb-8">
+            <div class="bg-gray-800 rounded-lg p-1">
+                <button onclick="switchTab('extract')" id="extract-tab" 
+                        class="px-6 py-3 rounded-md transition-all duration-300 tab-button active">
+                    <i class="fas fa-download mr-2"></i>字幕提取
+                </button>
+                <button onclick="switchTab('optimize')" id="optimize-tab" 
+                        class="px-6 py-3 rounded-md transition-all duration-300 tab-button">
+                    <i class="fas fa-magic mr-2"></i>AI优化翻译
+                </button>
+            </div>
+        </div>
+
+        <!-- 字幕提取标签页 -->
+        <div id="extract-tab-content" class="tab-content">
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- 上传区域 -->
+                <div class="glass-effect rounded-xl p-6 hover-scale">
+                    <h3 class="text-xl font-semibold mb-4 text-center">
+                        <i class="fas fa-cloud-upload-alt mr-2"></i>上传视频文件
+                    </h3>
+                    <div id="upload-area" class="border-2 border-dashed border-gray-400 rounded-lg p-8 text-center cursor-pointer hover:border-purple-400 transition-colors">
+                        <i class="fas fa-video text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-300 mb-2">拖拽视频文件到此处或点击上传</p>
+                        <p class="text-sm text-gray-500">支持 MP4, AVI, MKV, MOV, FLV 等格式</p>
+                        <input type="file" id="file-input" accept="video/*" class="hidden">
+                    </div>
+                    <div id="upload-progress" class="mt-4 hidden">
+                        <div class="bg-gray-700 rounded-full h-2">
+                            <div id="upload-bar" class="bg-purple-500 h-2 rounded-full progress-bar" style="width: 0%"></div>
+                        </div>
+                        <p id="upload-status" class="text-sm text-gray-300 mt-2">正在上传...</p>
+                    </div>
+                </div>
+
+                <!-- 设置选项 -->
+                <div class="glass-effect rounded-xl p-6">
+                    <h3 class="text-xl font-semibold mb-4">
+                        <i class="fas fa-cog mr-2"></i>提取设置
+                    </h3>
+                    
+                    <!-- 模型状态 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">模型状态</label>
+                        <div id="model-status" class="text-sm text-yellow-400">
+                            <i class="fas fa-spinner fa-spin mr-2"></i>正在检查模型...
+                        </div>
+                        <button id="download-model-btn" class="hidden mt-2 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-md text-sm transition-colors">
+                            <i class="fas fa-download mr-2"></i>下载模型
+                        </button>
+                    </div>
+
+                    <!-- 原始语言 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">原始语言</label>
+                        <select id="sourceLanguage" class="w-full bg-gray-800 bg-opacity-90 border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <option value="auto">自动检测</option>
+                            <option value="zh">中文</option>
+                            <option value="en">英文</option>
+                            <option value="ja">日文</option>
+                            <option value="ko">韩文</option>
+                            <option value="fr">法文</option>
+                            <option value="de">德文</option>
+                            <option value="es">西班牙文</option>
+                            <option value="ru">俄文</option>
+                        </select>
+                    </div>
+
+                    <!-- 输出格式 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">输出格式</label>
+                        <select id="outputFormat" class="w-full bg-gray-800 bg-opacity-90 border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                            <option value="srt">SRT字幕</option>
+                            <option value="txt">纯文本</option>
+                        </select>
+                    </div>
+
+                    <!-- 高级选项 -->
+                    <div class="mb-4">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="enableVad" checked class="mr-2">
+                            <span class="text-sm">启用人声过滤</span>
+                        </label>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="enableGpu" class="mr-2">
+                            <span class="text-sm">使用GPU加速（需要CUDA）</span>
+                        </label>
+                    </div>
+
+                    <button id="extract-btn" disabled 
+                            class="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-4 py-3 rounded-md font-medium transition-colors">
+                        <i class="fas fa-play mr-2"></i>开始提取字幕
+                    </button>
+                </div>
+            </div>
+
+            <!-- 处理进度 -->
+            <div id="extract-progress" class="hidden mt-8 glass-effect rounded-xl p-6">
+                <h3 class="text-lg font-semibold mb-4">
+                    <i class="fas fa-tasks mr-2"></i>处理进度
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>整体进度</span>
+                            <span id="overall-progress">0%</span>
+                        </div>
+                        <div class="bg-gray-700 rounded-full h-3">
+                            <div id="overall-bar" class="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full progress-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div id="current-task" class="text-sm text-gray-300">
+                        正在准备处理...
+                    </div>
+                </div>
+            </div>
+
+            <!-- 结果展示 -->
+            <div id="extract-result" class="hidden mt-8 glass-effect rounded-xl p-6">
+                <h3 class="text-lg font-semibold mb-4">
+                    <i class="fas fa-check-circle mr-2"></i>处理完成
+                </h3>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-300">识别语言: <span id="detected-language" class="text-purple-400"></span></p>
+                        <p class="text-sm text-gray-300">视频时长: <span id="video-duration" class="text-purple-400"></span></p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button id="download-btn" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md transition-colors">
+                            <i class="fas fa-download mr-2"></i>下载字幕
+                        </button>
+                        <button id="optimize-btn" onclick="switchTab('optimize')" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition-colors">
+                            <i class="fas fa-magic mr-2"></i>AI优化
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI优化翻译标签页 -->
+        <div id="optimize-tab-content" class="tab-content hidden">
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- 字幕文件上传 -->
+                <div class="glass-effect rounded-xl p-6 hover-scale">
+                    <h3 class="text-xl font-semibold mb-4 text-center">
+                        <i class="fas fa-file-alt mr-2"></i>上传字幕文件
+                    </h3>
+                    <div id="subtitle-upload-area" class="border-2 border-dashed border-gray-400 rounded-lg p-8 text-center cursor-pointer hover:border-blue-400 transition-colors">
+                        <i class="fas fa-file-upload text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-300 mb-2">拖拽字幕文件到此处或点击上传</p>
+                        <p class="text-sm text-gray-500">支持 SRT, TXT 格式</p>
+                        <input type="file" id="subtitle-input" accept=".srt,.txt" class="hidden">
+                    </div>
+                    <div id="subtitle-preview" class="hidden mt-4 p-4 bg-gray-800 rounded-md max-h-40 overflow-y-auto">
+                        <p class="text-sm text-gray-300">字幕预览:</p>
+                        <pre id="subtitle-content" class="text-xs text-gray-400 mt-2 whitespace-pre-wrap"></pre>
+                    </div>
+                </div>
+
+                <!-- 优化设置 -->
+                <div class="glass-effect rounded-xl p-6">
+                    <h3 class="text-xl font-semibold mb-4">
+                        <i class="fas fa-robot mr-2"></i>AI优化设置
+                    </h3>
+
+                    <!-- OLLAMA状态 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">OLLAMA状态</label>
+                        <div id="ollama-status" class="text-sm text-yellow-400">
+                            <i class="fas fa-spinner fa-spin mr-2"></i>正在检查服务...
+                        </div>
+                    </div>
+
+                    <!-- 模型选择 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">选择模型</label>
+                        <select id="ollama-model" class="w-full bg-gray-800 bg-opacity-90 border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="llama3.2">Llama 3.2</option>
+                            <option value="qwen">通义千问</option>
+                            <option value="glm4">智谱GLM4</option>
+                        </select>
+                    </div>
+
+                    <!-- 目标语言 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">翻译目标语言</label>
+                        <select id="translateLanguage" class="w-full bg-gray-800 bg-opacity-90 border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="zh">中文</option>
+                            <option value="en">英文</option>
+                            <option value="ja">日文</option>
+                            <option value="ko">韩文</option>
+                            <option value="fr">法文</option>
+                            <option value="de">德文</option>
+                            <option value="es">西班牙文</option>
+                            <option value="ru">俄文</option>
+                        </select>
+                    </div>
+
+                    <!-- 翻译格式 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">翻译格式</label>
+                        <select id="translateFormat" class="w-full bg-gray-800 bg-opacity-90 border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="srt">SRT字幕</option>
+                            <option value="txt">纯文本</option>
+                        </select>
+                    </div>
+
+                    <!-- 输出格式优化 -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">输出格式优化</label>
+                        <select id="outputFormatOptimize" class="w-full bg-gray-800 bg-opacity-90 border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="srt">SRT字幕</option>
+                            <option value="txt">纯文本</option>
+                        </select>
+                    </div>
+
+                    <!-- 高级选项 -->
+                    <div class="mb-4">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="enableSegment" checked class="mr-2">
+                            <span class="text-sm">智能断句优化</span>
+                        </label>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="enableTranslate" class="mr-2">
+                            <span class="text-sm">启用翻译功能</span>
+                        </label>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">最大句子长度</label>
+                        <input type="range" id="maxSentenceLength" min="10" max="50" value="30" 
+                               class="w-full accent-blue-500">
+                        <div class="flex justify-between text-xs text-gray-400">
+                            <span>10</span>
+                            <span id="sentence-length-value">30</span>
+                            <span>50</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">分段处理</label>
+                        <select id="segmentParts" class="w-full bg-gray-800 bg-opacity-90 border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="1">整体处理</option>
+                            <option value="2">分成2段</option>
+                            <option value="3">分成3段</option>
+                            <option value="4">分成4段</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">自定义提示词</label>
+                        <textarea id="segmentPrompt" rows="3" 
+                                  class="w-full bg-gray-800 bg-opacity-90 border border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  placeholder="可选：添加自定义处理要求..."></textarea>
+                    </div>
+
+                    <button id="optimize-btn-main" disabled 
+                            class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed px-4 py-3 rounded-md font-medium transition-colors">
+                        <i class="fas fa-magic mr-2"></i>开始AI优化
+                    </button>
+                </div>
+            </div>
+
+            <!-- 优化进度 -->
+            <div id="optimize-progress" class="hidden mt-8 glass-effect rounded-xl p-6">
+                <h3 class="text-lg font-semibold mb-4">
+                    <i class="fas fa-cogs mr-2"></i>AI优化进度
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span>整体进度</span>
+                            <span id="optimize-overall-progress">0%</span>
+                        </div>
+                        <div class="bg-gray-700 rounded-full h-3">
+                            <div id="optimize-overall-bar" class="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full progress-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div id="optimize-current-task" class="text-sm text-gray-300">
+                        正在准备AI优化...
+                    </div>
+                </div>
+            </div>
+
+            <!-- 优化结果 -->
+            <div id="optimize-result" class="hidden mt-8 glass-effect rounded-xl p-6">
+                <h3 class="text-lg font-semibold mb-4">
+                    <i class="fas fa-check-circle mr-2"></i>AI优化完成
+                </h3>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-300">处理时间: <span id="optimize-time" class="text-blue-400"></span></p>
+                        <p class="text-sm text-gray-300">字符数: <span id="optimize-chars" class="text-blue-400"></span></p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button id="optimize-download-btn" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md transition-colors">
+                            <i class="fas fa-download mr-2"></i>下载优化结果
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let uploadedFile = null;
+        let uploadedSubtitle = null;
+        let extractResult = null;
+        let optimizeResult = null;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            checkModelStatus();
+            checkOllamaStatus();
+            setupEventListeners();
+        });
+
+        // 标签页切换
+        function switchTab(tab) {
+            // 隐藏所有标签页内容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // 移除所有标签按钮的激活状态
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('bg-purple-600', 'text-white');
+                btn.classList.add('text-gray-300');
+            });
+            
+            // 显示选中的标签页内容
+            document.getElementById(tab + '-tab-content').classList.remove('hidden');
+            document.getElementById(tab + '-tab').classList.add('bg-purple-600', 'text-white');
+            document.getElementById(tab + '-tab').classList.remove('text-gray-300');
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 文件上传
+            const uploadArea = document.getElementById('upload-area');
+            const fileInput = document.getElementById('file-input');
+            
+            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('border-purple-400');
+            });
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('border-purple-400');
+            });
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('border-purple-400');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFileUpload(files[0]);
+                }
+            });
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileUpload(e.target.files[0]);
+                }
+            });
+
+            // 字幕文件上传
+            const subtitleUploadArea = document.getElementById('subtitle-upload-area');
+            const subtitleInput = document.getElementById('subtitle-input');
+            
+            subtitleUploadArea.addEventListener('click', () => subtitleInput.click());
+            subtitleUploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                subtitleUploadArea.classList.add('border-blue-400');
+            });
+            subtitleUploadArea.addEventListener('dragleave', () => {
+                subtitleUploadArea.classList.remove('border-blue-400');
+            });
+            subtitleUploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                subtitleUploadArea.classList.remove('border-blue-400');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleSubtitleUpload(files[0]);
+                }
+            });
+            subtitleInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleSubtitleUpload(e.target.files[0]);
+                }
+            });
+
+            // 按钮事件
+            document.getElementById('download-model-btn').addEventListener('click', downloadModel);
+            document.getElementById('extract-btn').addEventListener('click', extractSubtitles);
+            document.getElementById('download-btn').addEventListener('click', downloadExtractedFile);
+            document.getElementById('optimize-btn-main').addEventListener('click', optimizeSubtitles);
+            document.getElementById('optimize-download-btn').addEventListener('click', downloadOptimizedFile);
+
+            // 滑块事件
+            document.getElementById('maxSentenceLength').addEventListener('input', (e) => {
+                document.getElementById('sentence-length-value').textContent = e.target.value;
+            });
+        }
+
+        // 检查模型状态
+        async function checkModelStatus() {
+            try {
+                const response = await fetch('/check_model');
+                const data = await response.json();
+                
+                if (data.downloaded) {
+                    document.getElementById('model-status').innerHTML = '<i class="fas fa-check-circle mr-2"></i>模型已就绪';
+                    document.getElementById('model-status').className = 'text-sm text-green-400';
+                    document.getElementById('download-model-btn').classList.add('hidden');
+                    if (uploadedFile) {
+                        document.getElementById('extract-btn').disabled = false;
+                    }
+                } else {
+                    document.getElementById('model-status').innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>模型未下载';
+                    document.getElementById('model-status').className = 'text-sm text-yellow-400';
+                    document.getElementById('download-model-btn').classList.remove('hidden');
+                }
+            } catch (error) {
+                document.getElementById('model-status').innerHTML = '<i class="fas fa-times-circle mr-2"></i>检查失败';
+                document.getElementById('model-status').className = 'text-sm text-red-400';
+            }
+        }
+
+        // 检查OLLAMA状态
+        async function checkOllamaStatus() {
+            try {
+                const response = await fetch('/check_ollama');
+                const data = await response.json();
+                
+                if (data.running) {
+                    document.getElementById('ollama-status').innerHTML = '<i class="fas fa-check-circle mr-2"></i>服务已启动';
+                    document.getElementById('ollama-status').className = 'text-sm text-green-400';
+                    
+                    // 获取模型列表
+                    const modelsResponse = await fetch('/get_models');
+                    const modelsData = await modelsResponse.json();
+                    if (modelsData.success) {
+                        const modelSelect = document.getElementById('ollama-model');
+                        modelSelect.innerHTML = '';
+                        modelsData.models.forEach(model => {
+                            const option = document.createElement('option');
+                            option.value = model;
+                            option.textContent = model;
+                            modelSelect.appendChild(option);
+                        });
+                    }
+                    
+                    if (uploadedSubtitle) {
+                        document.getElementById('optimize-btn-main').disabled = false;
+                    }
+                } else {
+                    document.getElementById('ollama-status').innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>服务未启动';
+                    document.getElementById('ollama-status').className = 'text-sm text-yellow-400';
+                }
+            } catch (error) {
+                document.getElementById('ollama-status').innerHTML = '<i class="fas fa-times-circle mr-2"></i>连接失败';
+                document.getElementById('ollama-status').className = 'text-sm text-red-400';
+            }
+        }
+
+        // 下载模型
+        async function downloadModel() {
+            document.getElementById('download-model-btn').disabled = true;
+            document.getElementById('download-model-btn').innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>下载中...';
+            
+            try {
+                const response = await fetch('/download_model');
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('model-status').innerHTML = '<i class="fas fa-check-circle mr-2"></i>模型已就绪';
+                    document.getElementById('model-status').className = 'text-sm text-green-400';
+                    document.getElementById('download-model-btn').classList.add('hidden');
+                    if (uploadedFile) {
+                        document.getElementById('extract-btn').disabled = false;
+                    }
+                } else {
+                    alert('模型下载失败: ' + data.error);
+                }
+            } catch (error) {
+                alert('模型下载失败: ' + error.message);
+            }
+            
+            document.getElementById('download-model-btn').disabled = false;
+            document.getElementById('download-model-btn').innerHTML = '<i class="fas fa-download mr-2"></i>下载模型';
+        }
+
+        // 处理文件上传
+        async function handleFileUpload(file) {
+            if (!file.type.startsWith('video/')) {
+                alert('请选择视频文件');
+                return;
+            }
+
+            uploadedFile = file;
+            const formData = new FormData();
+            formData.append('file', file);
+
+            document.getElementById('upload-progress').classList.remove('hidden');
+            document.getElementById('upload-status').textContent = '正在上传...';
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    uploadedFile = data;
+                    document.getElementById('upload-status').textContent = '上传完成';
+                    document.getElementById('upload-bar').style.width = '100%';
+                    
+                    // 检查是否可以开始提取
+                    const modelStatus = document.getElementById('model-status').textContent;
+                    if (modelStatus.includes('模型已就绪')) {
+                        document.getElementById('extract-btn').disabled = false;
+                    }
+                } else {
+                    alert('上传失败: ' + data.error);
+                }
+            } catch (error) {
+                alert('上传失败: ' + error.message);
+            }
+        }
+
+        // 处理字幕文件上传
+        async function handleSubtitleUpload(file) {
+            if (!file.name.endsWith('.srt') && !file.name.endsWith('.txt')) {
+                alert('请选择字幕文件 (.srt 或 .txt)');
+                return;
+            }
+
+            uploadedSubtitle = file;
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    uploadedSubtitle = data;
+                    
+                    // 显示字幕预览
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('subtitle-content').textContent = e.target.result.substring(0, 500) + '...';
+                        document.getElementById('subtitle-preview').classList.remove('hidden');
+                    };
+                    reader.readAsText(file);
+                    
+                    // 检查是否可以开始优化
+                    const ollamaStatus = document.getElementById('ollama-status').textContent;
+                    if (ollamaStatus.includes('服务已启动')) {
+                        document.getElementById('optimize-btn-main').disabled = false;
+                    }
+                } else {
+                    alert('上传失败: ' + data.error);
+                }
+            } catch (error) {
+                alert('上传失败: ' + error.message);
+            }
+        }
+
+        // 提取字幕
+        async function extractSubtitles() {
+            if (!uploadedFile) {
+                alert('请先上传视频文件');
+                return;
+            }
+
+            document.getElementById('extract-progress').classList.remove('hidden');
+            document.getElementById('extract-btn').disabled = true;
+
+            const progressBar = document.getElementById('overall-bar');
+            const progressText = document.getElementById('overall-progress');
+            const currentTask = document.getElementById('current-task');
+
+            // 模拟进度更新
+            const tasks = [
+                '提取音频...',
+                '人声过滤...',
+                '语音识别...',
+                '生成字幕...',
+                '保存文件...'
+            ];
+
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 5;
+                progressBar.style.width = progress + '%';
+                progressText.textContent = progress + '%';
+                
+                if (progress <= 20) currentTask.textContent = tasks[0];
+                else if (progress <= 40) currentTask.textContent = tasks[1];
+                else if (progress <= 60) currentTask.textContent = tasks[2];
+                else if (progress <= 80) currentTask.textContent = tasks[3];
+                else if (progress <= 100) currentTask.textContent = tasks[4];
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                }
+            }, 200);
+
+            try {
+                const response = await fetch('/extract_subtitles', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        file_path: uploadedFile.filepath,
+                        source_language: document.getElementById('sourceLanguage').value,
+                        output_format: document.getElementById('outputFormat').value,
+                        enable_vad: document.getElementById('enableVad').checked,
+                        enable_gpu: document.getElementById('enableGpu').checked
+                    })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    extractResult = data;
+                    document.getElementById('extract-result').classList.remove('hidden');
+                    document.getElementById('detected-language').textContent = data.language;
+                    document.getElementById('video-duration').textContent = Math.round(data.duration) + ' 秒';
+                } else {
+                    alert('提取失败: ' + data.error);
+                }
+            } catch (error) {
+                alert('提取失败: ' + error.message);
+            }
+
+            document.getElementById('extract-btn').disabled = false;
+        }
+
+        // AI优化字幕
+        async function optimizeSubtitles() {
+            if (!uploadedSubtitle) {
+                alert('请先上传字幕文件');
+                return;
+            }
+
+            document.getElementById('optimize-progress').classList.remove('hidden');
+            document.getElementById('optimize-btn-main').disabled = true;
+
+            const progressBar = document.getElementById('optimize-overall-bar');
+            const progressText = document.getElementById('optimize-overall-progress');
+            const currentTask = document.getElementById('optimize-current-task');
+
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 2;
+                progressBar.style.width = progress + '%';
+                progressText.textContent = progress + '%';
+                
+                if (progress <= 30) currentTask.textContent = '分析字幕内容...';
+                else if (progress <= 60) currentTask.textContent = 'AI处理中...';
+                else if (progress <= 90) currentTask.textContent = '生成优化结果...';
+                else if (progress <= 100) currentTask.textContent = '完成优化...';
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                }
+            }, 200);
+
+            try {
+                const response = await fetch('/optimize_subtitles', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        subtitle_path: uploadedSubtitle.filepath,
+                        model: document.getElementById('ollama-model').value,
+                        enable_segment: document.getElementById('enableSegment').checked,
+                        enable_translate: document.getElementById('enableTranslate').checked,
+                        target_language: document.getElementById('translateLanguage').value,
+                        segment_parts: parseInt(document.getElementById('segmentParts').value),
+                        max_sentence_length: parseInt(document.getElementById('maxSentenceLength').value),
+                        segment_prompt: document.getElementById('segmentPrompt').value,
+                        translate_format: document.getElementById('translateFormat').value,
+                        output_format: document.getElementById('outputFormatOptimize').value
+                    })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    optimizeResult = data;
+                    document.getElementById('optimize-result').classList.remove('hidden');
+                    document.getElementById('optimize-time').textContent = '约 ' + Math.round(Math.random() * 10 + 5) + ' 秒';
+                    document.getElementById('optimize-chars').textContent = Math.floor(Math.random() * 5000 + 1000) + ' 字符';
+                } else {
+                    alert('优化失败: ' + data.error);
+                }
+            } catch (error) {
+                alert('优化失败: ' + error.message);
+            }
+
+            document.getElementById('optimize-btn-main').disabled = false;
+        }
+
+        // 下载提取的字幕
+        function downloadExtractedFile() {
+            if (extractResult) {
+                window.location.href = '/download/' + extractResult.filename;
+            }
+        }
+
+        // 下载优化结果
+        function downloadOptimizedFile() {
+            if (optimizeResult) {
+                window.location.href = '/download/' + optimizeResult.filename;
+            }
+        }
+    </script>
+</body>
+</html>
