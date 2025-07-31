@@ -16,7 +16,7 @@
 ### 一键打包版 (推荐)
 - **Windows可执行文件**: [智能字幕提取器 v1.0.0](https://github.com/Jasonshll/-/releases/download/v1.0.0/OLLAMA视频翻译助手.exe)
 - 无需安装Python环境，下载即用
-- 文件大小: ~200MB (包含所有依赖)
+- 文件大小: ~400MB (不包含whisper)
 
 ### 源码安装
 ```bash
