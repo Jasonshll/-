@@ -14,14 +14,14 @@
 ## 📥 下载使用
 
 ### 一键打包版 (推荐)
-- **Windows可执行文件**: [智能字幕提取器 v1.0.0](https://github.com/Jasonshll/-/releases/download/v1.0.0/OLLAMA视频翻译助手.exe)
+- **Windows可执行文件**: [OLLAMA视频翻译助手 v1.0.0](https://github.com/Jasonshll/OllamaVideoTranslator/releases/tag/OLLAMA%E8%A7%86%E9%A2%91%E7%BF%BB%E8%AF%91%E5%8A%A9%E6%89%8Bv1.0)
 - 无需安装Python环境，下载即用
 - 文件大小: ~400MB (不包含whisper)
 
 ### 源码安装
 ```bash
-git clone https://github.com/Jasonshll/-.git
-cd -
+git clone https://github.com/Jasonshll/OllamaVideoTranslator.git
+cd OllamaVideoTranslator
 pip install -r requirements.txt
 python app.py
 ```
