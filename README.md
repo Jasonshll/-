@@ -28,7 +28,7 @@ python app.py
 
 ## 🖥️ 软件截图
 
-![主界面截图](主页面截图.png)
+![主界面截图](https://raw.githubusercontent.com/Jasonshll/OllamaVideoTranslator/main/主页面截图.png)
 
 ## 🚀 快速开始
 
